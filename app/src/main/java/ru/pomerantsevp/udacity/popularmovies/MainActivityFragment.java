@@ -1,8 +1,10 @@
 package ru.pomerantsevp.udacity.popularmovies;
 
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -55,14 +57,20 @@ public class MainActivityFragment extends Fragment {
     }
 
     private void updateMovies() {
-        new FetchMoviesTask().execute();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        String sortOrder = prefs.getString(getString(R.string.pref_order_key),
+                getString(R.string.pref_order_default));
+        new FetchMoviesTask().execute(sortOrder);
     }
 
-    private class FetchMoviesTask extends AsyncTask<Void, Void, String[]> {
+    private class FetchMoviesTask extends AsyncTask<String, Void, String[]> {
         private final String TAG = FetchMoviesTask.class.getSimpleName();
 
         @Override
-        protected String[] doInBackground(Void... params) {
+        protected String[] doInBackground(String... params) {
+            if (params.length == 0) {
+                return null;
+            }
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
@@ -74,7 +82,7 @@ public class MainActivityFragment extends Fragment {
             try {
                 // Construct the URL for theMovieDB query
                 Uri builtUri = Uri.parse("http://api.themoviedb.org/3/discover/movie").buildUpon()
-                        .appendQueryParameter("sort_by", "popularity.desc")
+                        .appendQueryParameter("sort_by", params[0])
                         .appendQueryParameter("api_key", getString(R.string.movie_db_key))
                         .build();
                 URL url = new URL(builtUri.toString());
