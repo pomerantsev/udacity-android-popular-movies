@@ -192,6 +192,13 @@ public class MainActivityFragment extends Fragment {
             ImageView imageView;
             if (convertView == null) {
                 imageView = new ImageView(mContext);
+                imageView.setLayoutParams(new ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        // If we don't set images' height, layout can break
+                        // 1.5 is the height / width ratio of most of the posters
+                        (int) (((GridView) parent).getColumnWidth() * 1.5)
+                ));
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             } else {
                 imageView = (ImageView) convertView;
             }
