@@ -11,13 +11,16 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -34,27 +37,11 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
-        String[] movieTitles = {
-                "Whiplash",
-                "Birdman",
-                "Interstellar",
-                "Avengers: Age of Ultron",
-                "Mad Max: Fury Road",
-                "Ant-Man",
-                "Guardians of the Galaxy",
-                "Kingsman: Secret Service"
-        };
-        ArrayList<String> movieTitlesList = new ArrayList<>();
-        for (String title : movieTitles) {
-            movieTitlesList.add(title);
-        }
-
         ListView listView = (ListView) rootView.findViewById(R.id.movies_list);
 
         mListAdapter = new ArrayAdapter<>(
                 getActivity(),
-                R.layout.list_item_movie,
-                movieTitlesList
+                R.layout.list_item_movie
         );
         listView.setAdapter(mListAdapter);
 
@@ -137,14 +124,20 @@ public class MainActivityFragment extends Fragment {
                 }
             }
 
-            Log.d(TAG, movieListJsonStr);
-
-//            try {
-//                return getWeatherDataFromJson(forecastJsonStr, numDays);
-//            } catch (JSONException e) {
-//                Log.e(LOG_TAG, e.getMessage(), e);
-//                e.printStackTrace();
-//            }
+            try {
+                JSONObject movieListJson = new JSONObject(movieListJsonStr);
+                JSONArray movieListJsonArray = movieListJson.getJSONArray("results");
+                int arrayLength = movieListJsonArray.length();
+                String[] results = new String[arrayLength];
+                for (int i = 0; i < arrayLength; i++) {
+                    JSONObject movieJson = movieListJsonArray.getJSONObject(i);
+                    results[i] = movieJson.getString("original_title");
+                }
+                return results;
+            } catch (JSONException e) {
+                Log.e(TAG, e.getMessage(), e);
+                e.printStackTrace();
+            }
 
             return null;
         }
