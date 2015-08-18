@@ -14,28 +14,34 @@
         <TextView
             android:id="@+id/title"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
+            android:textSize="40sp" />
         <ImageView
             android:id="@+id/poster"
             android:layout_width="130dp"
             android:layout_height="195dp"
-            android:layout_below="@id/title" />
+            android:layout_below="@id/title"
+            android:layout_marginRight="@dimen/activity_horizontal_margin" />
         <TextView
             android:id="@+id/release_date"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/title"
-            android:layout_toRightOf="@id/poster" />
+            android:layout_toRightOf="@id/poster"
+            android:textSize="26sp" />
         <TextView
             android:id="@+id/rating"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/release_date"
-            android:layout_toRightOf="@id/poster" />
+            android:layout_toRightOf="@id/poster"
+            android:layout_marginTop="6sp" />
         <TextView
             android:id="@+id/plot_synopsis"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/poster" />
+            android:layout_below="@id/poster"
+            android:layout_marginTop="@dimen/activity_vertical_margin" />
     </RelativeLayout>
 </ScrollView>
