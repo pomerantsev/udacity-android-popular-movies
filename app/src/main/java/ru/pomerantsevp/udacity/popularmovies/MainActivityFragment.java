@@ -54,7 +54,8 @@ public class MainActivityFragment extends Fragment {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getActivity(), DetailActivity.class);
+                Intent intent = new Intent(getActivity(), DetailActivity.class)
+                        .putExtra(Intent.EXTRA_TEXT, mImageAdapter.getItem(position).toString());
                 startActivity(intent);
             }
         });
@@ -75,11 +76,11 @@ public class MainActivityFragment extends Fragment {
         new FetchMoviesTask().execute(sortOrder);
     }
 
-    private class FetchMoviesTask extends AsyncTask<String, Void, String[]> {
+    private class FetchMoviesTask extends AsyncTask<String, Void, JSONObject[]> {
         private final String TAG = FetchMoviesTask.class.getSimpleName();
 
         @Override
-        protected String[] doInBackground(String... params) {
+        protected JSONObject[] doInBackground(String... params) {
             if (params.length == 0) {
                 return null;
             }
@@ -148,10 +149,9 @@ public class MainActivityFragment extends Fragment {
                 JSONObject movieListJson = new JSONObject(movieListJsonStr);
                 JSONArray movieListJsonArray = movieListJson.getJSONArray("results");
                 int arrayLength = movieListJsonArray.length();
-                String[] results = new String[arrayLength];
+                JSONObject[] results = new JSONObject[arrayLength];
                 for (int i = 0; i < arrayLength; i++) {
-                    JSONObject movieJson = movieListJsonArray.getJSONObject(i);
-                    results[i] = "http://image.tmdb.org/t/p/w500/" + movieJson.getString("poster_path");
+                    results[i] = movieListJsonArray.getJSONObject(i);
                 }
                 return results;
             } catch (JSONException e) {
@@ -163,11 +163,11 @@ public class MainActivityFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(String[] strings) {
-            if (strings != null) {
+        protected void onPostExecute(JSONObject[] movies) {
+            if (movies != null) {
                 mImageAdapter.clear();
-                for (String string : strings) {
-                    mImageAdapter.add(string);
+                for (JSONObject movie : movies) {
+                    mImageAdapter.add(movie);
                 }
             }
         }
@@ -175,21 +175,21 @@ public class MainActivityFragment extends Fragment {
 
     private class ImageAdapter extends BaseAdapter {
         private Context mContext;
-        private ArrayList<String> imageUrls;
+        private ArrayList<JSONObject> mMovies;
 
         public ImageAdapter(Context c) {
             mContext = c;
-            imageUrls = new ArrayList<>();
+            mMovies = new ArrayList<>();
         }
 
         @Override
         public int getCount() {
-            return imageUrls.size();
+            return mMovies.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return null;
+            return mMovies.get(position);
         }
 
         @Override
@@ -213,17 +213,25 @@ public class MainActivityFragment extends Fragment {
                 imageView = (ImageView) convertView;
             }
 
-            Picasso.with(mContext).load(imageUrls.get(position)).into(imageView);
-            return imageView;
+            String imageUrl = "";
+            try {
+                imageUrl = "http://image.tmdb.org/t/p/w500/" +
+                        mMovies.get(position).getString("poster_path");
+            } catch (JSONException e) {
+                // ignore
+            } finally {
+                Picasso.with(mContext).load(imageUrl).into(imageView);
+                return imageView;
+            }
         }
 
         public void clear() {
-            imageUrls.clear();
+            mMovies.clear();
             notifyDataSetChanged();
         }
 
-        public void add(String url) {
-            imageUrls.add(url);
+        public void add(JSONObject movie) {
+            mMovies.add(movie);
             notifyDataSetChanged();
         }
     }

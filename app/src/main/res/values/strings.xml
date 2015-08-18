@@ -11,5 +11,4 @@
     <string name="pref_order_rating" translatable="false">vote_average.desc</string>
     <string name="pref_order_default" translatable="false">@string/pref_order_popularity</string>
     <string name="title_activity_detail">DetailActivity</string>
-    <string name="hello_world">Hello world!</string>
 </resources>
