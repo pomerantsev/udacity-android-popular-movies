@@ -215,8 +215,8 @@ public class MainActivityFragment extends Fragment {
 
             String imageUrl = "";
             try {
-                imageUrl = "http://image.tmdb.org/t/p/w500/" +
-                        mMovies.get(position).getString("poster_path");
+                imageUrl = SharedConstants.IMAGE_PATH_PREFIX +
+                        mMovies.get(position).getString(SharedConstants.POSTER_PATH);
             } catch (JSONException e) {
                 // ignore
             } finally {
