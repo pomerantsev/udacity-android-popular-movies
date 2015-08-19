@@ -19,9 +19,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/**
- * A placeholder fragment containing a simple view.
- */
 public class DetailActivityFragment extends Fragment {
 
     public DetailActivityFragment() {
@@ -49,21 +46,17 @@ public class DetailActivityFragment extends Fragment {
                 TextView releaseDate = (TextView) rootView.findViewById(R.id.release_date);
                 SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
                 SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy");
-                try {
-                    Date date = inputFormat.parse(movie.getString("release_date"));
-                    releaseDate.setText(outputFormat.format(date));
-                } catch (ParseException e) {
-                    // ignore
-                }
+                Date date = inputFormat.parse(movie.getString("release_date"));
+                releaseDate.setText(outputFormat.format(date));
 
                 TextView rating = (TextView) rootView.findViewById(R.id.rating);
                 rating.setText(movie.getString("vote_average") + "/10");
 
                 TextView plotSynopsis = (TextView) rootView.findViewById(R.id.plot_synopsis);
                 plotSynopsis.setText(movie.getString("overview"));
-            } catch (JSONException e) {
-                // ignore
             }
+            catch (JSONException e) {}
+            catch (ParseException e) {}
         }
 
         return rootView;
