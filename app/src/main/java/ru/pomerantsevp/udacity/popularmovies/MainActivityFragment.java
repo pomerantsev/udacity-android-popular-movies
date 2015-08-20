@@ -37,7 +37,7 @@ public class MainActivityFragment extends Fragment {
     private final String SORT_ORDER_KEY = "sort_order";
 
     private ImageAdapter mImageAdapter;
-    private JSONObject[] mMovies;
+    private JSONArray mMovies;
 
     private String mSortOrder;
 
@@ -48,14 +48,11 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            String[] movieStrings = savedInstanceState.getStringArray(MOVIES_KEY);
+            String moviesString = savedInstanceState.getString(MOVIES_KEY);
             mSortOrder = savedInstanceState.getString(SORT_ORDER_KEY);
-            if (movieStrings != null) {
+            if (moviesString != null) {
                 try {
-                    mMovies = new JSONObject[movieStrings.length];
-                    for (int i = 0; i < movieStrings.length; i++) {
-                        mMovies[i] = new JSONObject(movieStrings[i]);
-                    }
+                    mMovies = new JSONArray(moviesString);
                 } catch (JSONException e) {}
             }
         }
@@ -82,11 +79,7 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         if (mMovies != null) {
-            String[] movieStrings = new String[mMovies.length];
-            for (int i = 0; i < mMovies.length; i++) {
-                movieStrings[i] = mMovies[i].toString();
-            }
-            outState.putStringArray(MOVIES_KEY, movieStrings);
+            outState.putString(MOVIES_KEY, mMovies.toString());
         }
         if (mSortOrder != null) {
             outState.putString(SORT_ORDER_KEY, mSortOrder);
@@ -112,21 +105,23 @@ public class MainActivityFragment extends Fragment {
         new FetchMoviesTask().execute(sortOrder);
     }
 
-    private void displayMovies(JSONObject[] movies) {
+    private void displayMovies(JSONArray movies) {
         mMovies = movies;
         if (movies != null) {
             mImageAdapter.clear();
-            for (JSONObject movie : movies) {
-                mImageAdapter.add(movie);
-            }
+            try {
+                for (int i = 0; i < movies.length(); i++) {
+                    mImageAdapter.add(movies.getJSONObject(i));
+                }
+            } catch (JSONException e) {}
         }
     }
 
-    private class FetchMoviesTask extends AsyncTask<String, Void, JSONObject[]> {
+    private class FetchMoviesTask extends AsyncTask<String, Void, JSONArray> {
         private final String TAG = FetchMoviesTask.class.getSimpleName();
 
         @Override
-        protected JSONObject[] doInBackground(String... params) {
+        protected JSONArray doInBackground(String... params) {
             if (params.length == 0) {
                 return null;
             }
@@ -177,12 +172,7 @@ public class MainActivityFragment extends Fragment {
             try {
                 JSONObject movieListJson = new JSONObject(movieListJsonStr);
                 JSONArray movieListJsonArray = movieListJson.getJSONArray("results");
-                int arrayLength = movieListJsonArray.length();
-                JSONObject[] results = new JSONObject[arrayLength];
-                for (int i = 0; i < arrayLength; i++) {
-                    results[i] = movieListJsonArray.getJSONObject(i);
-                }
-                return results;
+                return movieListJsonArray;
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage(), e);
                 e.printStackTrace();
@@ -192,7 +182,7 @@ public class MainActivityFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(JSONObject[] movies) {
+        protected void onPostExecute(JSONArray movies) {
             displayMovies(movies);
         }
     }
