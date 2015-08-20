@@ -93,7 +93,7 @@ public class MainActivityFragment extends Fragment {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String sortOrder = prefs.getString(getString(R.string.pref_order_key),
                 getString(R.string.pref_order_default));
-        if (mMovies == null || mSortOrder != sortOrder) {
+        if (mMovies == null || !mSortOrder.equals(sortOrder)) {
             updateAndDisplayMovies(sortOrder);
         } else {
             displayMovies(mMovies);
