@@ -33,7 +33,13 @@ import java.util.ArrayList;
 
 public class MainActivityFragment extends Fragment {
 
+    private final String MOVIES_KEY = "movies";
+    private final String SORT_ORDER_KEY = "sort_order";
+
     private ImageAdapter mImageAdapter;
+    private JSONObject[] mMovies;
+
+    private String mSortOrder;
 
     public MainActivityFragment() {
     }
@@ -41,6 +47,19 @@ public class MainActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            String[] movieStrings = savedInstanceState.getStringArray(MOVIES_KEY);
+            mSortOrder = savedInstanceState.getString(SORT_ORDER_KEY);
+            if (movieStrings != null) {
+                try {
+                    mMovies = new JSONObject[movieStrings.length];
+                    for (int i = 0; i < movieStrings.length; i++) {
+                        mMovies[i] = new JSONObject(movieStrings[i]);
+                    }
+                } catch (JSONException e) {}
+            }
+        }
+
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         GridView gridView = (GridView) rootView.findViewById(R.id.movies_list);
@@ -61,16 +80,46 @@ public class MainActivityFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        updateMovies();
+    public void onSaveInstanceState(Bundle outState) {
+        if (mMovies != null) {
+            String[] movieStrings = new String[mMovies.length];
+            for (int i = 0; i < mMovies.length; i++) {
+                movieStrings[i] = mMovies[i].toString();
+            }
+            outState.putStringArray(MOVIES_KEY, movieStrings);
+        }
+        if (mSortOrder != null) {
+            outState.putString(SORT_ORDER_KEY, mSortOrder);
+        }
+        super.onSaveInstanceState(outState);
     }
 
-    private void updateMovies() {
+    @Override
+    public void onStart() {
+        super.onStart();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String sortOrder = prefs.getString(getString(R.string.pref_order_key),
                 getString(R.string.pref_order_default));
+        if (mMovies == null || mSortOrder != sortOrder) {
+            updateAndDisplayMovies(sortOrder);
+        } else {
+            displayMovies(mMovies);
+        }
+        mSortOrder = sortOrder;
+    }
+
+    private void updateAndDisplayMovies(String sortOrder) {
         new FetchMoviesTask().execute(sortOrder);
+    }
+
+    private void displayMovies(JSONObject[] movies) {
+        mMovies = movies;
+        if (movies != null) {
+            mImageAdapter.clear();
+            for (JSONObject movie : movies) {
+                mImageAdapter.add(movie);
+            }
+        }
     }
 
     private class FetchMoviesTask extends AsyncTask<String, Void, JSONObject[]> {
@@ -144,32 +193,27 @@ public class MainActivityFragment extends Fragment {
 
         @Override
         protected void onPostExecute(JSONObject[] movies) {
-            if (movies != null) {
-                mImageAdapter.clear();
-                for (JSONObject movie : movies) {
-                    mImageAdapter.add(movie);
-                }
-            }
+            displayMovies(movies);
         }
     }
 
     private class ImageAdapter extends BaseAdapter {
         private Context mContext;
-        private ArrayList<JSONObject> mMovies;
+        private ArrayList<JSONObject> mMoviesList;
 
         public ImageAdapter(Context c) {
             mContext = c;
-            mMovies = new ArrayList<>();
+            mMoviesList = new ArrayList<>();
         }
 
         @Override
         public int getCount() {
-            return mMovies.size();
+            return mMoviesList.size();
         }
 
         @Override
         public Object getItem(int position) {
-            return mMovies.get(position);
+            return mMoviesList.get(position);
         }
 
         @Override
@@ -179,24 +223,22 @@ public class MainActivityFragment extends Fragment {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            ImageView imageView;
+            PosterImageView imageView;
             if (convertView == null) {
-                imageView = new ImageView(mContext);
+                imageView = new PosterImageView(mContext);
                 imageView.setLayoutParams(new ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
-                        // If we don't set images' height, layout can break
-                        // 1.5 is the height / width ratio of most of the posters
-                        (int) (((GridView) parent).getColumnWidth() * 1.5)
+                        ViewGroup.LayoutParams.WRAP_CONTENT
                 ));
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
             } else {
-                imageView = (ImageView) convertView;
+                imageView = (PosterImageView) convertView;
             }
 
             String imageUrl = "";
             try {
                 imageUrl = SharedConstants.IMAGE_PATH_PREFIX +
-                        mMovies.get(position).getString(SharedConstants.POSTER_PATH);
+                        mMoviesList.get(position).getString(SharedConstants.POSTER_PATH);
             } catch (JSONException e) {
                 // ignore
             } finally {
@@ -206,12 +248,12 @@ public class MainActivityFragment extends Fragment {
         }
 
         public void clear() {
-            mMovies.clear();
+            mMoviesList.clear();
             notifyDataSetChanged();
         }
 
         public void add(JSONObject movie) {
-            mMovies.add(movie);
+            mMoviesList.add(movie);
             notifyDataSetChanged();
         }
     }
