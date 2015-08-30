@@ -38,7 +38,10 @@ public class DetailActivityFragment extends Fragment {
                 String imageUrl = SharedConstants.IMAGE_PATH_PREFIX +
                         movie.getString(SharedConstants.POSTER_PATH);
                 ImageView poster = (ImageView) rootView.findViewById(R.id.poster);
-                Picasso.with(activity).load(imageUrl).into(poster);
+                Picasso.with(activity)
+                        .load(imageUrl)
+                        .placeholder(R.drawable.loading_image)
+                        .into(poster);
 
                 TextView title = (TextView) rootView.findViewById(R.id.title);
                 title.setText(movie.getString("original_title"));
