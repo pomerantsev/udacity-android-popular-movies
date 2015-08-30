@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Popular Movies</string>
     <string name="action_settings">Settings</string>
+    <string name="title_activity_detail">Movie Details</string>
     <string name="title_activity_settings">Settings</string>
     <string name="empty_list">Data unavailable</string>
     <string name="network_unavailable_message">Network is unavailable. Please check that you’re not in Airplane Mode.</string>
