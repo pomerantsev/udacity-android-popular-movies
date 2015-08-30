@@ -1,6 +1,5 @@
 package ru.pomerantsevp.udacity.popularmovies;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -13,11 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.GridView;
-import android.widget.ImageView;
-
-import com.squareup.picasso.Picasso;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,7 +24,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 
 public class MainActivityFragment extends Fragment {
 
@@ -187,64 +181,4 @@ public class MainActivityFragment extends Fragment {
         }
     }
 
-    private class ImageAdapter extends BaseAdapter {
-        private Context mContext;
-        private ArrayList<JSONObject> mMoviesList;
-
-        public ImageAdapter(Context c) {
-            mContext = c;
-            mMoviesList = new ArrayList<>();
-        }
-
-        @Override
-        public int getCount() {
-            return mMoviesList.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return mMoviesList.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            PosterImageView imageView;
-            if (convertView == null) {
-                imageView = new PosterImageView(mContext);
-                imageView.setLayoutParams(new ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                ));
-                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            } else {
-                imageView = (PosterImageView) convertView;
-            }
-
-            String imageUrl = "";
-            try {
-                imageUrl = SharedConstants.IMAGE_PATH_PREFIX +
-                        mMoviesList.get(position).getString(SharedConstants.POSTER_PATH);
-            } catch (JSONException e) {
-                // ignore
-            } finally {
-                Picasso.with(mContext).load(imageUrl).into(imageView);
-                return imageView;
-            }
-        }
-
-        public void clear() {
-            mMoviesList.clear();
-            notifyDataSetChanged();
-        }
-
-        public void add(JSONObject movie) {
-            mMoviesList.add(movie);
-            notifyDataSetChanged();
-        }
-    }
 }
