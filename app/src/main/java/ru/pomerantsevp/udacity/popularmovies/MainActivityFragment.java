@@ -6,7 +6,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v4.app.Fragment;
+import android.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +25,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import ru.pomerantsevp.udacity.popularmovies.utils.NetworkHelper;
+
 public class MainActivityFragment extends Fragment {
 
     private final String MOVIES_KEY = "movies";
@@ -32,6 +34,7 @@ public class MainActivityFragment extends Fragment {
 
     private ImageAdapter mImageAdapter;
     private JSONArray mMovies;
+    private NetworkNotificationDialogFragment mNetworkNotificationDialogFragment;
 
     private String mSortOrder;
 
@@ -58,6 +61,8 @@ public class MainActivityFragment extends Fragment {
 
         mImageAdapter = new ImageAdapter(getActivity());
         gridView.setAdapter(mImageAdapter);
+
+        mNetworkNotificationDialogFragment = new NetworkNotificationDialogFragment();
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -97,7 +102,11 @@ public class MainActivityFragment extends Fragment {
     }
 
     private void updateAndDisplayMovies(String sortOrder) {
-        new FetchMoviesTask().execute(sortOrder);
+        if (NetworkHelper.isNetworkAvailable(getActivity())) {
+            new FetchMoviesTask().execute(sortOrder);
+        } else {
+            mNetworkNotificationDialogFragment.show(getFragmentManager(), NetworkNotificationDialogFragment.TAG);
+        }
     }
 
     private void displayMovies(JSONArray movies) {
