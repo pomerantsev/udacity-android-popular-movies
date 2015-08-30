@@ -54,6 +54,7 @@ public class MainActivityFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         GridView gridView = (GridView) rootView.findViewById(R.id.movies_list);
+        gridView.setEmptyView(rootView.findViewById(R.id.no_connection_text));
 
         mImageAdapter = new ImageAdapter(getActivity());
         gridView.setAdapter(mImageAdapter);
