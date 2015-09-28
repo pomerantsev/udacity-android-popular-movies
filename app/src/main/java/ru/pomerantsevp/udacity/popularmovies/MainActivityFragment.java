@@ -27,6 +27,8 @@ public class MainActivityFragment extends Fragment {
     private final String MOVIES_KEY = "movies";
     private final String SORT_ORDER_KEY = "sort_order";
 
+    private View mEmptyView;
+
     private ImageAdapter mImageAdapter;
     private ArrayList<Movie> mMovies;
     private NetworkNotificationDialogFragment mNetworkNotificationDialogFragment;
@@ -47,7 +49,7 @@ public class MainActivityFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         GridView gridView = (GridView) rootView.findViewById(R.id.movies_list);
-        gridView.setEmptyView(rootView.findViewById(R.id.no_connection_text));
+        mEmptyView = rootView.findViewById(R.id.no_connection_text);
 
         mImageAdapter = new ImageAdapter(getActivity());
         gridView.setAdapter(mImageAdapter);
@@ -106,7 +108,7 @@ public class MainActivityFragment extends Fragment {
 
                 @Override
                 public void failure(RetrofitError error) {
-                    // Do nothing
+                    mEmptyView.setVisibility(View.VISIBLE);
                 }
             });
         } else {
@@ -120,6 +122,11 @@ public class MainActivityFragment extends Fragment {
             mImageAdapter.clear();
             for (int i = 0; i < movies.size(); i++) {
                 mImageAdapter.add(movies.get(i));
+            }
+            if (movies.size() > 0) {
+                mEmptyView.setVisibility(View.GONE);
+            } else {
+                mEmptyView.setVisibility(View.VISIBLE);
             }
         }
     }
