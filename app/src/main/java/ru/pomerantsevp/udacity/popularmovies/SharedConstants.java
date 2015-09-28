@@ -6,4 +6,5 @@ package ru.pomerantsevp.udacity.popularmovies;
 public class SharedConstants {
     public static String IMAGE_PATH_PREFIX = "http://image.tmdb.org/t/p/w500/";
     public static String POSTER_PATH = "poster_path";
+    public static String MOVIE_KEY = "movie";
 }

@@ -1,39 +1,34 @@
 package ru.pomerantsevp.udacity.popularmovies;
 
+import android.app.Fragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.Arrays;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
 import ru.pomerantsevp.udacity.popularmovies.utils.NetworkHelper;
 
 public class MainActivityFragment extends Fragment {
+
+    private final static String TAG = MainActivityFragment.class.getName();
 
     private final String MOVIES_KEY = "movies";
     private final String SORT_ORDER_KEY = "sort_order";
 
     private ImageAdapter mImageAdapter;
-    private JSONArray mMovies;
+    private ArrayList<Movie> mMovies;
     private NetworkNotificationDialogFragment mNetworkNotificationDialogFragment;
 
     private String mSortOrder;
@@ -45,13 +40,8 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            String moviesString = savedInstanceState.getString(MOVIES_KEY);
+            mMovies = savedInstanceState.getParcelableArrayList(MOVIES_KEY);
             mSortOrder = savedInstanceState.getString(SORT_ORDER_KEY);
-            if (moviesString != null) {
-                try {
-                    mMovies = new JSONArray(moviesString);
-                } catch (JSONException e) {}
-            }
         }
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
@@ -68,7 +58,7 @@ public class MainActivityFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(getActivity(), DetailActivity.class)
-                        .putExtra(Intent.EXTRA_TEXT, mImageAdapter.getItem(position).toString());
+                        .putExtra(SharedConstants.MOVIE_KEY, mImageAdapter.getItem(position));
                 startActivity(intent);
             }
         });
@@ -79,7 +69,7 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         if (mMovies != null) {
-            outState.putString(MOVIES_KEY, mMovies.toString());
+            outState.putParcelableArrayList(MOVIES_KEY, mMovies);
         }
         if (mSortOrder != null) {
             outState.putString(SORT_ORDER_KEY, mSortOrder);
@@ -103,92 +93,34 @@ public class MainActivityFragment extends Fragment {
 
     private void updateAndDisplayMovies(String sortOrder) {
         if (NetworkHelper.isNetworkAvailable(getActivity())) {
-            new FetchMoviesTask().execute(sortOrder);
+            RestAdapter restAdapter = new RestAdapter.Builder()
+                    .setEndpoint("http://api.themoviedb.org")
+                    .build();
+
+            MovieService service = restAdapter.create(MovieService.class);
+            service.listMovies(sortOrder, getString(R.string.movie_db_key), new Callback<MoviesResponse>() {
+                @Override
+                public void success(MoviesResponse moviesResponse, Response response) {
+                    displayMovies(new ArrayList<>(Arrays.asList(moviesResponse.results)));
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+                    // Do nothing
+                }
+            });
         } else {
             mNetworkNotificationDialogFragment.show(getFragmentManager(), NetworkNotificationDialogFragment.TAG);
         }
     }
 
-    private void displayMovies(JSONArray movies) {
+    private void displayMovies(ArrayList<Movie> movies) {
         mMovies = movies;
         if (movies != null) {
             mImageAdapter.clear();
-            try {
-                for (int i = 0; i < movies.length(); i++) {
-                    mImageAdapter.add(movies.getJSONObject(i));
-                }
-            } catch (JSONException e) {}
+            for (int i = 0; i < movies.size(); i++) {
+                mImageAdapter.add(movies.get(i));
+            }
         }
     }
-
-    private class FetchMoviesTask extends AsyncTask<String, Void, JSONArray> {
-        private final String TAG = FetchMoviesTask.class.getSimpleName();
-
-        @Override
-        protected JSONArray doInBackground(String... params) {
-            if (params.length == 0) {
-                return null;
-            }
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-            String movieListJsonStr = null;
-
-            try {
-                Uri builtUri = Uri.parse("http://api.themoviedb.org/3/discover/movie").buildUpon()
-                        .appendQueryParameter("sort_by", params[0])
-                        .appendQueryParameter("api_key", getString(R.string.movie_db_key))
-                        .build();
-                URL url = new URL(builtUri.toString());
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (inputStream == null) {
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    buffer.append(line + "\n");
-                }
-                if (buffer.length() == 0) {
-                    return null;
-                }
-                movieListJsonStr = buffer.toString();
-            } catch (IOException e) {
-                Log.e(TAG, "Error ", e);
-                return null;
-            } finally{
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(TAG, "Error closing stream", e);
-                    }
-                }
-            }
-
-            try {
-                JSONObject movieListJson = new JSONObject(movieListJsonStr);
-                JSONArray movieListJsonArray = movieListJson.getJSONArray("results");
-                return movieListJsonArray;
-            } catch (JSONException e) {
-                Log.e(TAG, e.getMessage(), e);
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(JSONArray movies) {
-            displayMovies(movies);
-        }
-    }
-
 }
