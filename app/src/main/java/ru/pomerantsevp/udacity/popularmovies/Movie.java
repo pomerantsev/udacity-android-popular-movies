@@ -7,17 +7,19 @@ import android.os.Parcelable;
  * Created by pavel on 9/27/15.
  */
 public class Movie implements Parcelable {
+    public int id;
     public String poster_path;
     public String original_title;
     public String release_date;
-    public String vote_average;
+    public float vote_average;
     public String overview;
 
     private Movie(Parcel in) {
+        id = in.readInt();
         poster_path = in.readString();
         original_title = in.readString();
         release_date = in.readString();
-        vote_average = in.readString();
+        vote_average = in.readFloat();
         overview = in.readString();
     }
 
@@ -28,10 +30,11 @@ public class Movie implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(id);
         dest.writeString(poster_path);
         dest.writeString(original_title);
         dest.writeString(release_date);
-        dest.writeString(vote_average);
+        dest.writeFloat(vote_average);
         dest.writeString(overview);
     }
 

@@ -1,8 +1,10 @@
 package ru.pomerantsevp.udacity.popularmovies;
 
 import android.app.Fragment;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
@@ -18,6 +20,7 @@ import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import ru.pomerantsevp.udacity.popularmovies.data.MovieContract;
 import ru.pomerantsevp.udacity.popularmovies.utils.NetworkHelper;
 
 public class MainActivityFragment extends Fragment {
@@ -121,6 +124,7 @@ public class MainActivityFragment extends Fragment {
         if (movies != null) {
             mImageAdapter.clear();
             for (int i = 0; i < movies.size(); i++) {
+                insertMovieIntoDb(movies.get(i));
                 mImageAdapter.add(movies.get(i));
             }
             if (movies.size() > 0) {
@@ -129,5 +133,27 @@ public class MainActivityFragment extends Fragment {
                 mEmptyView.setVisibility(View.VISIBLE);
             }
         }
+    }
+
+    private void insertMovieIntoDb(Movie movie) {
+        Cursor findMovieCursor = getActivity().getContentResolver().query(
+                MovieContract.MovieEntry.buildMovieUri(movie.id),
+                null, null, null, null
+        );
+        if (findMovieCursor.getCount() == 0) {
+            ContentValues movieEntry = new ContentValues();
+            movieEntry.put(MovieContract.MovieEntry.COLUMN_TMDB_ID, movie.id);
+            movieEntry.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, movie.poster_path);
+            movieEntry.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, movie.original_title);
+            movieEntry.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, movie.release_date);
+            movieEntry.put(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE, movie.vote_average);
+            movieEntry.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, movie.overview);
+
+            getActivity().getContentResolver().insert(
+                    MovieContract.MovieEntry.CONTENT_URI,
+                    movieEntry
+            );
+        }
+        findMovieCursor.close();
     }
 }

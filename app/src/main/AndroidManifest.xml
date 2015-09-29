@@ -30,6 +30,10 @@
             android:label="@string/title_activity_detail"
             android:parentActivityName=".MainActivity" >
         </activity>
+
+        <provider
+            android:name=".data.MovieProvider"
+            android:authorities="ru.pomerantsevp.udacity.popularmovies" />
     </application>
 
 </manifest>
