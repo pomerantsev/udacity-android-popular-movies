@@ -14,6 +14,8 @@ public class Movie implements Parcelable {
     public float vote_average;
     public String overview;
 
+    public Movie() {}
+
     private Movie(Parcel in) {
         id = in.readInt();
         poster_path = in.readString();

@@ -3,6 +3,7 @@ package ru.pomerantsevp.udacity.popularmovies;
 import android.app.Fragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
@@ -18,6 +19,7 @@ import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import ru.pomerantsevp.udacity.popularmovies.data.MovieContract;
 import ru.pomerantsevp.udacity.popularmovies.utils.NetworkHelper;
 
 public class MainActivityFragment extends Fragment {
@@ -85,49 +87,71 @@ public class MainActivityFragment extends Fragment {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String sortOrder = prefs.getString(getString(R.string.pref_order_key),
                 getString(R.string.pref_order_default));
-        if (mMovies == null || !mSortOrder.equals(sortOrder)) {
+        if (mMovies == null || !mSortOrder.equals(sortOrder) ||
+                // If we're viewing favorites, we need to update them on every activity restart -
+                // this list is prone to frequent updates.
+                sortOrder == getString(R.string.pref_order_favorite)) {
             updateAndDisplayMovies(sortOrder);
         } else {
-            displayMovies(mMovies);
+            displayMovies();
         }
         mSortOrder = sortOrder;
     }
 
     private void updateAndDisplayMovies(String sortOrder) {
-        if (NetworkHelper.isNetworkAvailable(getActivity())) {
-            RestAdapter restAdapter = new RestAdapter.Builder()
-                    .setEndpoint("http://api.themoviedb.org")
-                    .build();
-
-            MovieService service = restAdapter.create(MovieService.class);
-            service.listMovies(sortOrder, getString(R.string.movie_db_key), new Callback<MoviesResponse>() {
-                @Override
-                public void success(MoviesResponse moviesResponse, Response response) {
-                    displayMovies(new ArrayList<>(Arrays.asList(moviesResponse.results)));
-                }
-
-                @Override
-                public void failure(RetrofitError error) {
-                    mEmptyView.setVisibility(View.VISIBLE);
-                }
-            });
+        if (sortOrder == getString(R.string.pref_order_favorite)) {
+            Cursor favoriteMoviesCursor = getActivity().getContentResolver().query(
+                    MovieContract.MovieEntry.CONTENT_URI, null, null, null, null
+            );
+            if (mMovies == null) {
+                mMovies = new ArrayList<>();
+            }
+            mMovies.clear();
+            while(favoriteMoviesCursor.moveToNext()) {
+                Movie movie = new Movie();
+                movie.id = favoriteMoviesCursor.getInt(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_TMDB_ID));
+                movie.poster_path = favoriteMoviesCursor.getString(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_POSTER_PATH));
+                movie.original_title = favoriteMoviesCursor.getString(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE));
+                movie.release_date = favoriteMoviesCursor.getString(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_RELEASE_DATE));
+                movie.vote_average = favoriteMoviesCursor.getFloat(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE));
+                movie.overview = favoriteMoviesCursor.getString(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_OVERVIEW));
+                mMovies.add(movie);
+            }
+            displayMovies();
         } else {
-            mNetworkNotificationDialogFragment.show(getFragmentManager(), NetworkNotificationDialogFragment.TAG);
+            if (NetworkHelper.isNetworkAvailable(getActivity())) {
+                RestAdapter restAdapter = new RestAdapter.Builder()
+                        .setEndpoint("http://api.themoviedb.org")
+                        .build();
+
+                MovieService service = restAdapter.create(MovieService.class);
+                service.listMovies(sortOrder, getString(R.string.movie_db_key), new Callback<MoviesResponse>() {
+                    @Override
+                    public void success(MoviesResponse moviesResponse, Response response) {
+                        mMovies = new ArrayList<>(Arrays.asList(moviesResponse.results));
+                        displayMovies();
+                    }
+
+                    @Override
+                    public void failure(RetrofitError error) {
+                        mEmptyView.setVisibility(View.VISIBLE);
+                    }
+                });
+            } else {
+                mNetworkNotificationDialogFragment.show(getFragmentManager(), NetworkNotificationDialogFragment.TAG);
+            }
         }
     }
 
-    private void displayMovies(ArrayList<Movie> movies) {
-        mMovies = movies;
-        if (movies != null) {
-            mImageAdapter.clear();
-            for (int i = 0; i < movies.size(); i++) {
-                mImageAdapter.add(movies.get(i));
-            }
-            if (movies.size() > 0) {
-                mEmptyView.setVisibility(View.GONE);
-            } else {
-                mEmptyView.setVisibility(View.VISIBLE);
-            }
+    private void displayMovies() {
+        mImageAdapter.clear();
+        for (int i = 0; i < mMovies.size(); i++) {
+            mImageAdapter.add(mMovies.get(i));
+        }
+        if (mMovies.size() > 0) {
+            mEmptyView.setVisibility(View.GONE);
+        } else {
+            mEmptyView.setVisibility(View.VISIBLE);
         }
     }
 }
