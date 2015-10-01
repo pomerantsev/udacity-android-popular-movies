@@ -2,11 +2,14 @@ package ru.pomerantsevp.udacity.popularmovies;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -16,7 +19,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import ru.pomerantsevp.udacity.popularmovies.data.MovieContract;
+
 public class DetailActivityFragment extends Fragment {
+
+    private boolean mFavorite;
+    private Movie mMovie;
+    private Button mFavoriteButton;
 
     public DetailActivityFragment() {
     }
@@ -29,8 +38,8 @@ public class DetailActivityFragment extends Fragment {
         Activity activity = getActivity();
         Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra(SharedConstants.MOVIE_KEY)) {
-            Movie movie = intent.getParcelableExtra(SharedConstants.MOVIE_KEY);
-            String imageUrl = SharedConstants.IMAGE_PATH_PREFIX + movie.poster_path;
+            mMovie = intent.getParcelableExtra(SharedConstants.MOVIE_KEY);
+            String imageUrl = SharedConstants.IMAGE_PATH_PREFIX + mMovie.poster_path;
             ImageView poster = (ImageView) rootView.findViewById(R.id.poster);
             Picasso.with(activity)
                     .load(imageUrl)
@@ -38,23 +47,75 @@ public class DetailActivityFragment extends Fragment {
                     .into(poster);
 
             TextView title = (TextView) rootView.findViewById(R.id.title);
-            title.setText(movie.original_title);
+            title.setText(mMovie.original_title);
 
             TextView releaseDate = (TextView) rootView.findViewById(R.id.release_date);
             SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd");
             SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy");
             try {
-                Date date = inputFormat.parse(movie.release_date);
+                Date date = inputFormat.parse(mMovie.release_date);
                 releaseDate.setText(outputFormat.format(date));
             } catch (ParseException e) {}
 
             TextView rating = (TextView) rootView.findViewById(R.id.rating);
-            rating.setText(movie.vote_average + "/10");
+            rating.setText(mMovie.vote_average + "/10");
+
+            mFavoriteButton = (Button) rootView.findViewById(R.id.favorite);
+            Cursor findMovieCursor = getActivity().getContentResolver().query(
+                    MovieContract.MovieEntry.buildMovieUri(mMovie.id),
+                    null, null, null, null
+            );
+            if (findMovieCursor.getCount() == 0) {
+                setFavoriteView(false);
+            } else {
+                setFavoriteView(true);
+            }
+            findMovieCursor.close();
+            mFavoriteButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    toggleFavorite();
+                }
+            });
 
             TextView plotSynopsis = (TextView) rootView.findViewById(R.id.plot_synopsis);
-            plotSynopsis.setText(movie.overview);
+            plotSynopsis.setText(mMovie.overview);
         }
 
         return rootView;
+    }
+
+    private void setFavoriteView(boolean favorite) {
+        mFavorite = favorite;
+        mFavoriteButton.setCompoundDrawablesWithIntrinsicBounds(
+                favorite ? android.R.drawable.star_on : android.R.drawable.star_off, 0, 0, 0);
+    }
+
+    private void toggleFavorite() {
+        if (mMovie != null) {
+            if (mFavorite) {
+                int rowsDeleted = getActivity().getContentResolver().delete(
+                        MovieContract.MovieEntry.buildMovieUri(mMovie.id), null, null
+                );
+                if (rowsDeleted > 0) {
+                    setFavoriteView(false);
+                }
+            } else {
+                ContentValues movieEntry = new ContentValues();
+                movieEntry.put(MovieContract.MovieEntry.COLUMN_TMDB_ID, mMovie.id);
+                movieEntry.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, mMovie.poster_path);
+                movieEntry.put(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE, mMovie.original_title);
+                movieEntry.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, mMovie.release_date);
+                movieEntry.put(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE, mMovie.vote_average);
+                movieEntry.put(MovieContract.MovieEntry.COLUMN_OVERVIEW, mMovie.overview);
+
+                getActivity().getContentResolver().insert(
+                        MovieContract.MovieEntry.CONTENT_URI,
+                        movieEntry
+                );
+
+                setFavoriteView(true);
+            }
+        }
     }
 }

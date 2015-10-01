@@ -38,6 +38,14 @@
             android:layout_below="@id/release_date"
             android:layout_toRightOf="@id/poster"
             android:layout_marginTop="6sp" />
+        <Button
+            android:id="@+id/favorite"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/rating"
+            android:layout_toRightOf="@id/poster"
+            android:layout_marginTop="6sp"
+            android:text="@string/favorite" />
         <TextView
             android:id="@+id/plot_synopsis"
             android:layout_width="wrap_content"
