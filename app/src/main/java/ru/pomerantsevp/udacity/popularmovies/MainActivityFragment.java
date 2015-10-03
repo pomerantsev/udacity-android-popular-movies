@@ -19,7 +19,10 @@ import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
+import ru.pomerantsevp.udacity.popularmovies.data.Movie;
 import ru.pomerantsevp.udacity.popularmovies.data.MovieContract;
+import ru.pomerantsevp.udacity.popularmovies.data.MovieService;
+import ru.pomerantsevp.udacity.popularmovies.data.MoviesResponse;
 import ru.pomerantsevp.udacity.popularmovies.utils.NetworkHelper;
 
 public class MainActivityFragment extends Fragment {

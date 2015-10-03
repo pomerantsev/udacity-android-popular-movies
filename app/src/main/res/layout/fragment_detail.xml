@@ -52,5 +52,27 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/poster"
             android:layout_marginTop="@dimen/activity_vertical_margin" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/plot_synopsis"
+            android:orientation="vertical"
+            android:layout_marginTop="@dimen/activity_vertical_margin">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@android:style/TextAppearance.DeviceDefault.Medium"
+                android:text="@string/trailers" />
+            <ListView
+                android:id="@+id/trailers_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/trailers_empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/trailers_empty"
+                tools:visibility="gone" />
+        </LinearLayout>
     </RelativeLayout>
 </ScrollView>

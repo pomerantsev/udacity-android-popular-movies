@@ -6,6 +6,8 @@
     <string name="empty_list">Data unavailable</string>
     <string name="network_unavailable_message">Network is unavailable. Please check that you’re not in Airplane Mode.</string>
     <string name="favorite">Favorite</string>
+    <string name="trailers">Trailers</string>
+    <string name="trailers_empty">No trailers available</string>
 
     <string name="ok">Ok</string>
 

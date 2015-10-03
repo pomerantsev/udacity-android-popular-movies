@@ -5,27 +5,46 @@ import android.app.Fragment;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
+import ru.pomerantsevp.udacity.popularmovies.data.Movie;
 import ru.pomerantsevp.udacity.popularmovies.data.MovieContract;
+import ru.pomerantsevp.udacity.popularmovies.data.MovieService;
+import ru.pomerantsevp.udacity.popularmovies.data.Trailer;
+import ru.pomerantsevp.udacity.popularmovies.data.TrailersResponse;
+import ru.pomerantsevp.udacity.popularmovies.utils.LayoutHelper;
 
 public class DetailActivityFragment extends Fragment {
 
+    public static final String TAG = DetailActivityFragment.class.getName();
+
     private boolean mFavorite;
     private Movie mMovie;
+    private List<Trailer> mTrailers;
     private Button mFavoriteButton;
+    private ListView mTrailersListView;
 
     public DetailActivityFragment() {
     }
@@ -80,6 +99,43 @@ public class DetailActivityFragment extends Fragment {
 
             TextView plotSynopsis = (TextView) rootView.findViewById(R.id.plot_synopsis);
             plotSynopsis.setText(mMovie.overview);
+
+            mTrailersListView = (ListView) rootView.findViewById(R.id.trailers_list);
+            mTrailersListView.setEmptyView(rootView.findViewById(R.id.trailers_empty));
+
+            mTrailersListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    startActivity(new Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse("http://youtube.com/watch?v=" + mTrailers.get(position).key)
+                    ));
+                }
+            });
+
+
+            RestAdapter restAdapter = new RestAdapter.Builder()
+                    .setEndpoint("http://api.themoviedb.org")
+                    .build();
+
+            MovieService service = restAdapter.create(MovieService.class);
+            service.listTrailers(Integer.toString(mMovie.id), getString(R.string.movie_db_key),
+                    new Callback<TrailersResponse>() {
+                @Override
+                public void success(TrailersResponse trailersResponse, Response response) {
+                    mTrailers = new ArrayList<>(Arrays.asList(trailersResponse.results));
+                    TrailersAdapter trailersAdapter = new TrailersAdapter(
+                            getActivity(),
+                            mTrailers
+                    );
+                    mTrailersListView.setAdapter(trailersAdapter);
+                    LayoutHelper.setListViewHeightBasedOnItems(mTrailersListView);
+                }
+
+                @Override
+                public void failure(RetrofitError error) {
+                }
+            });
         }
 
         return rootView;

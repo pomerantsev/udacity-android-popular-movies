@@ -10,6 +10,8 @@ import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
+import ru.pomerantsevp.udacity.popularmovies.data.Movie;
+
 /**
  * Created by pavel on 8/30/15.
  */

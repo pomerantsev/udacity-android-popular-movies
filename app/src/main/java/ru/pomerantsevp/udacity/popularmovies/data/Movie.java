@@ -1,4 +1,4 @@
-package ru.pomerantsevp.udacity.popularmovies;
+package ru.pomerantsevp.udacity.popularmovies.data;
 
 import android.os.Parcel;
 import android.os.Parcelable;

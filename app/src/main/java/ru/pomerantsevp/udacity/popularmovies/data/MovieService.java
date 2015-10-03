@@ -1,7 +1,8 @@
-package ru.pomerantsevp.udacity.popularmovies;
+package ru.pomerantsevp.udacity.popularmovies.data;
 
 import retrofit.Callback;
 import retrofit.http.GET;
+import retrofit.http.Path;
 import retrofit.http.Query;
 
 /**
@@ -12,4 +13,9 @@ public interface MovieService {
     void listMovies(@Query("sort_by") String sortBy,
                     @Query("api_key") String apiKey,
                     Callback<MoviesResponse> cb);
+
+    @GET("/3/movie/{id}/videos")
+    void listTrailers(@Path("id") String id,
+                      @Query("api_key") String apiKey,
+                      Callback<TrailersResponse> cb);
 }
