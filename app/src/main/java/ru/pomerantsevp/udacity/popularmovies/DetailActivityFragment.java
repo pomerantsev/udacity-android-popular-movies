@@ -36,7 +36,6 @@ import ru.pomerantsevp.udacity.popularmovies.data.Review;
 import ru.pomerantsevp.udacity.popularmovies.data.ReviewsResponse;
 import ru.pomerantsevp.udacity.popularmovies.data.Trailer;
 import ru.pomerantsevp.udacity.popularmovies.data.TrailersResponse;
-import ru.pomerantsevp.udacity.popularmovies.utils.LayoutHelper;
 
 public class DetailActivityFragment extends Fragment {
 
@@ -133,7 +132,6 @@ public class DetailActivityFragment extends Fragment {
                                     mTrailers
                             );
                             mTrailersListView.setAdapter(trailersAdapter);
-                            LayoutHelper.setListViewHeightBasedOnItems(mTrailersListView);
                         }
 
                         @Override
@@ -154,7 +152,6 @@ public class DetailActivityFragment extends Fragment {
                                     mReviews
                             );
                             mReviewsListView.setAdapter(reviewsAdapter);
-                            LayoutHelper.setListViewHeightBasedOnItems(mReviewsListView);
                         }
 
                         @Override
