@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="Like all the variants of Robinson Crusoe—including Cast Away and, of course, Robinson Crusoe on Mars—this film is about a man, Matt Damon's Mark Watney, who summons all of his ingenuity and courage to endure a seemingly impossible situation, then must deal with loneliness on top of it all. If you've ever seen a film, you know going in that things are going to turn out fine for Mark—that no studio is going to pay for a special effects driven epic about a smart, likable castaway who dies in the last five minutes." />
+    <TextView
+        android:id="@+id/author"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="Matt Zoller Seitz" />
+</LinearLayout>

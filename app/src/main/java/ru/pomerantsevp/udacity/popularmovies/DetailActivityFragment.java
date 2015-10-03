@@ -32,6 +32,8 @@ import retrofit.client.Response;
 import ru.pomerantsevp.udacity.popularmovies.data.Movie;
 import ru.pomerantsevp.udacity.popularmovies.data.MovieContract;
 import ru.pomerantsevp.udacity.popularmovies.data.MovieService;
+import ru.pomerantsevp.udacity.popularmovies.data.Review;
+import ru.pomerantsevp.udacity.popularmovies.data.ReviewsResponse;
 import ru.pomerantsevp.udacity.popularmovies.data.Trailer;
 import ru.pomerantsevp.udacity.popularmovies.data.TrailersResponse;
 import ru.pomerantsevp.udacity.popularmovies.utils.LayoutHelper;
@@ -42,9 +44,11 @@ public class DetailActivityFragment extends Fragment {
 
     private boolean mFavorite;
     private Movie mMovie;
-    private List<Trailer> mTrailers;
     private Button mFavoriteButton;
+    private List<Trailer> mTrailers;
     private ListView mTrailersListView;
+    private List<Review> mReviews;
+    private ListView mReviewsListView;
 
     public DetailActivityFragment() {
     }
@@ -100,6 +104,12 @@ public class DetailActivityFragment extends Fragment {
             TextView plotSynopsis = (TextView) rootView.findViewById(R.id.plot_synopsis);
             plotSynopsis.setText(mMovie.overview);
 
+            RestAdapter restAdapter = new RestAdapter.Builder()
+                    .setEndpoint("http://api.themoviedb.org")
+                    .build();
+
+            MovieService movieService = restAdapter.create(MovieService.class);
+
             mTrailersListView = (ListView) rootView.findViewById(R.id.trailers_list);
             mTrailersListView.setEmptyView(rootView.findViewById(R.id.trailers_empty));
 
@@ -113,29 +123,44 @@ public class DetailActivityFragment extends Fragment {
                 }
             });
 
-
-            RestAdapter restAdapter = new RestAdapter.Builder()
-                    .setEndpoint("http://api.themoviedb.org")
-                    .build();
-
-            MovieService service = restAdapter.create(MovieService.class);
-            service.listTrailers(Integer.toString(mMovie.id), getString(R.string.movie_db_key),
+            movieService.listTrailers(Integer.toString(mMovie.id), getString(R.string.movie_db_key),
                     new Callback<TrailersResponse>() {
-                @Override
-                public void success(TrailersResponse trailersResponse, Response response) {
-                    mTrailers = new ArrayList<>(Arrays.asList(trailersResponse.results));
-                    TrailersAdapter trailersAdapter = new TrailersAdapter(
-                            getActivity(),
-                            mTrailers
-                    );
-                    mTrailersListView.setAdapter(trailersAdapter);
-                    LayoutHelper.setListViewHeightBasedOnItems(mTrailersListView);
-                }
+                        @Override
+                        public void success(TrailersResponse trailersResponse, Response response) {
+                            mTrailers = new ArrayList<>(Arrays.asList(trailersResponse.results));
+                            TrailersAdapter trailersAdapter = new TrailersAdapter(
+                                    getActivity(),
+                                    mTrailers
+                            );
+                            mTrailersListView.setAdapter(trailersAdapter);
+                            LayoutHelper.setListViewHeightBasedOnItems(mTrailersListView);
+                        }
 
-                @Override
-                public void failure(RetrofitError error) {
-                }
-            });
+                        @Override
+                        public void failure(RetrofitError error) {
+                        }
+                    });
+
+            mReviewsListView = (ListView) rootView.findViewById(R.id.reviews_list);
+            mReviewsListView.setEmptyView(rootView.findViewById(R.id.reviews_empty));
+
+            movieService.listReviews(Integer.toString(mMovie.id), getString(R.string.movie_db_key),
+                    new Callback<ReviewsResponse>() {
+                        @Override
+                        public void success(ReviewsResponse reviewsResponse, Response response) {
+                            mReviews = new ArrayList<>(Arrays.asList(reviewsResponse.results));
+                            ReviewsAdapter reviewsAdapter = new ReviewsAdapter(
+                                    getActivity(),
+                                    mReviews
+                            );
+                            mReviewsListView.setAdapter(reviewsAdapter);
+                            LayoutHelper.setListViewHeightBasedOnItems(mReviewsListView);
+                        }
+
+                        @Override
+                        public void failure(RetrofitError error) {
+                        }
+                    });
         }
 
         return rootView;

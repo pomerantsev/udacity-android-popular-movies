@@ -18,4 +18,9 @@ public interface MovieService {
     void listTrailers(@Path("id") String id,
                       @Query("api_key") String apiKey,
                       Callback<TrailersResponse> cb);
+
+    @GET("/3/movie/{id}/reviews")
+    void listReviews(@Path("id") String id,
+                     @Query("api_key") String apiKey,
+                     Callback<ReviewsResponse> cb);
 }

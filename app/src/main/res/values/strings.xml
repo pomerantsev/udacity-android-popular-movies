@@ -8,6 +8,8 @@
     <string name="favorite">Favorite</string>
     <string name="trailers">Trailers</string>
     <string name="trailers_empty">No trailers available</string>
+    <string name="reviews">Reviews</string>
+    <string name="reviews_empty">No reviews available</string>
 
     <string name="ok">Ok</string>
 
