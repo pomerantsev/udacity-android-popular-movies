@@ -40,6 +40,7 @@ import ru.pomerantsevp.udacity.popularmovies.data.TrailersResponse;
 public class DetailActivityFragment extends Fragment {
 
     public static final String TAG = DetailActivityFragment.class.getName();
+    private static final String MOVIE_TAG = "movie";
 
     private boolean mFavorite;
     private Movie mMovie;
@@ -52,6 +53,14 @@ public class DetailActivityFragment extends Fragment {
     public DetailActivityFragment() {
     }
 
+    public static DetailActivityFragment newInstance(Movie movie) {
+        DetailActivityFragment f = new DetailActivityFragment();
+        Bundle args = new Bundle();
+        args.putParcelable(MOVIE_TAG, movie);
+        f.setArguments(args);
+        return f;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -60,8 +69,12 @@ public class DetailActivityFragment extends Fragment {
         Activity activity = getActivity();
         Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra(SharedConstants.MOVIE_KEY)) {
-            rootView.findViewById(R.id.content_container).setVisibility(View.VISIBLE);
             mMovie = intent.getParcelableExtra(SharedConstants.MOVIE_KEY);
+        } else if (getArguments() != null) {
+            mMovie = getArguments().getParcelable(MOVIE_TAG);
+        }
+        if (mMovie != null) {
+            rootView.findViewById(R.id.content_container).setVisibility(View.VISIBLE);
             String imageUrl = SharedConstants.IMAGE_PATH_PREFIX + mMovie.poster_path;
             ImageView poster = (ImageView) rootView.findViewById(R.id.poster);
             Picasso.with(activity)

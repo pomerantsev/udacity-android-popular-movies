@@ -1,7 +1,6 @@
 package ru.pomerantsevp.udacity.popularmovies;
 
 import android.app.Fragment;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -26,6 +25,10 @@ import ru.pomerantsevp.udacity.popularmovies.data.MoviesResponse;
 import ru.pomerantsevp.udacity.popularmovies.utils.NetworkHelper;
 
 public class MainActivityFragment extends Fragment {
+
+    public interface ListClickCallback {
+        public void onItemSelected(Movie movie);
+    }
 
     private final static String TAG = MainActivityFragment.class.getName();
 
@@ -64,9 +67,7 @@ public class MainActivityFragment extends Fragment {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getActivity(), DetailActivity.class)
-                        .putExtra(SharedConstants.MOVIE_KEY, mImageAdapter.getItem(position));
-                startActivity(intent);
+                ((ListClickCallback) getActivity()).onItemSelected(mImageAdapter.getItem(position));
             }
         });
 
