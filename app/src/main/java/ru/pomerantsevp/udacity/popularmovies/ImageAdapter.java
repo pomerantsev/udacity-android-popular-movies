@@ -8,17 +8,16 @@ import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
+
+import ru.pomerantsevp.udacity.popularmovies.data.Movie;
 
 /**
  * Created by pavel on 8/30/15.
  */
 class ImageAdapter extends BaseAdapter {
     private Context mContext;
-    private ArrayList<JSONObject> mMoviesList;
+    private ArrayList<Movie> mMoviesList;
 
     public ImageAdapter(Context c) {
         mContext = c;
@@ -31,7 +30,7 @@ class ImageAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int position) {
+    public Movie getItem(int position) {
         return mMoviesList.get(position);
     }
 
@@ -55,15 +54,10 @@ class ImageAdapter extends BaseAdapter {
         }
 
         String imageUrl = "";
-        try {
-            imageUrl = SharedConstants.IMAGE_PATH_PREFIX +
-                    mMoviesList.get(position).getString(SharedConstants.POSTER_PATH);
-        } catch (JSONException e) {
-            // ignore
-        } finally {
-            Picasso.with(mContext).load(imageUrl).into(imageView);
-            return imageView;
-        }
+        imageUrl = SharedConstants.IMAGE_PATH_PREFIX +
+                mMoviesList.get(position).poster_path;
+        Picasso.with(mContext).load(imageUrl).into(imageView);
+        return imageView;
     }
 
     public void clear() {
@@ -71,7 +65,7 @@ class ImageAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    public void add(JSONObject movie) {
+    public void add(Movie movie) {
         mMoviesList.add(movie);
         notifyDataSetChanged();
     }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:divider="?android:attr/dividerHorizontal"
+    tools:context="ru.pomerantsevp.udacity.popularmovies.MainActivity">
+    <fragment
+        android:id="@+id/fragment_main"
+        android:name="ru.pomerantsevp.udacity.popularmovies.MainActivityFragment"
+        tools:layout="@layout/fragment_main"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="2" />
+
+    <FrameLayout
+        android:id="@+id/movie_detail_container"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="5" />
+
+</LinearLayout>

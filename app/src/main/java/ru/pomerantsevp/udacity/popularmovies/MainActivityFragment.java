@@ -1,39 +1,44 @@
 package ru.pomerantsevp.udacity.popularmovies;
 
-import android.content.Intent;
+import android.app.Fragment;
 import android.content.SharedPreferences;
-import android.net.Uri;
-import android.os.AsyncTask;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.ArrayList;
+import java.util.Arrays;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
+import ru.pomerantsevp.udacity.popularmovies.data.Movie;
+import ru.pomerantsevp.udacity.popularmovies.data.MovieContract;
+import ru.pomerantsevp.udacity.popularmovies.data.MovieService;
+import ru.pomerantsevp.udacity.popularmovies.data.MoviesResponse;
 import ru.pomerantsevp.udacity.popularmovies.utils.NetworkHelper;
 
 public class MainActivityFragment extends Fragment {
 
+    public interface ListClickCallback {
+        public void onItemSelected(Movie movie);
+    }
+
+    private final static String TAG = MainActivityFragment.class.getName();
+
     private final String MOVIES_KEY = "movies";
     private final String SORT_ORDER_KEY = "sort_order";
 
+    private View mEmptyView;
+
     private ImageAdapter mImageAdapter;
-    private JSONArray mMovies;
+    private ArrayList<Movie> mMovies;
     private NetworkNotificationDialogFragment mNetworkNotificationDialogFragment;
 
     private String mSortOrder;
@@ -45,19 +50,14 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            String moviesString = savedInstanceState.getString(MOVIES_KEY);
+            mMovies = savedInstanceState.getParcelableArrayList(MOVIES_KEY);
             mSortOrder = savedInstanceState.getString(SORT_ORDER_KEY);
-            if (moviesString != null) {
-                try {
-                    mMovies = new JSONArray(moviesString);
-                } catch (JSONException e) {}
-            }
         }
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
         GridView gridView = (GridView) rootView.findViewById(R.id.movies_list);
-        gridView.setEmptyView(rootView.findViewById(R.id.no_connection_text));
+        mEmptyView = rootView.findViewById(R.id.no_connection_text);
 
         mImageAdapter = new ImageAdapter(getActivity());
         gridView.setAdapter(mImageAdapter);
@@ -67,9 +67,7 @@ public class MainActivityFragment extends Fragment {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(getActivity(), DetailActivity.class)
-                        .putExtra(Intent.EXTRA_TEXT, mImageAdapter.getItem(position).toString());
-                startActivity(intent);
+                ((ListClickCallback) getActivity()).onItemSelected(mImageAdapter.getItem(position));
             }
         });
 
@@ -79,7 +77,7 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         if (mMovies != null) {
-            outState.putString(MOVIES_KEY, mMovies.toString());
+            outState.putParcelableArrayList(MOVIES_KEY, mMovies);
         }
         if (mSortOrder != null) {
             outState.putString(SORT_ORDER_KEY, mSortOrder);
@@ -93,102 +91,71 @@ public class MainActivityFragment extends Fragment {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
         String sortOrder = prefs.getString(getString(R.string.pref_order_key),
                 getString(R.string.pref_order_default));
-        if (mMovies == null || !mSortOrder.equals(sortOrder)) {
+        if (mMovies == null || !mSortOrder.equals(sortOrder) ||
+                // If we're viewing favorites, we need to update them on every activity restart -
+                // this list is prone to frequent updates.
+                sortOrder == getString(R.string.pref_order_favorite)) {
             updateAndDisplayMovies(sortOrder);
         } else {
-            displayMovies(mMovies);
+            displayMovies();
         }
         mSortOrder = sortOrder;
     }
 
     private void updateAndDisplayMovies(String sortOrder) {
-        if (NetworkHelper.isNetworkAvailable(getActivity())) {
-            new FetchMoviesTask().execute(sortOrder);
+        if (sortOrder == getString(R.string.pref_order_favorite)) {
+            Cursor favoriteMoviesCursor = getActivity().getContentResolver().query(
+                    MovieContract.MovieEntry.CONTENT_URI, null, null, null, null
+            );
+            if (mMovies == null) {
+                mMovies = new ArrayList<>();
+            }
+            mMovies.clear();
+            while(favoriteMoviesCursor.moveToNext()) {
+                Movie movie = new Movie();
+                movie.id = favoriteMoviesCursor.getInt(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_TMDB_ID));
+                movie.poster_path = favoriteMoviesCursor.getString(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_POSTER_PATH));
+                movie.original_title = favoriteMoviesCursor.getString(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_ORIGINAL_TITLE));
+                movie.release_date = favoriteMoviesCursor.getString(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_RELEASE_DATE));
+                movie.vote_average = favoriteMoviesCursor.getFloat(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE));
+                movie.overview = favoriteMoviesCursor.getString(favoriteMoviesCursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_OVERVIEW));
+                mMovies.add(movie);
+            }
+            displayMovies();
         } else {
-            mNetworkNotificationDialogFragment.show(getFragmentManager(), NetworkNotificationDialogFragment.TAG);
-        }
-    }
-
-    private void displayMovies(JSONArray movies) {
-        mMovies = movies;
-        if (movies != null) {
-            mImageAdapter.clear();
-            try {
-                for (int i = 0; i < movies.length(); i++) {
-                    mImageAdapter.add(movies.getJSONObject(i));
-                }
-            } catch (JSONException e) {}
-        }
-    }
-
-    private class FetchMoviesTask extends AsyncTask<String, Void, JSONArray> {
-        private final String TAG = FetchMoviesTask.class.getSimpleName();
-
-        @Override
-        protected JSONArray doInBackground(String... params) {
-            if (params.length == 0) {
-                return null;
-            }
-            HttpURLConnection urlConnection = null;
-            BufferedReader reader = null;
-            String movieListJsonStr = null;
-
-            try {
-                Uri builtUri = Uri.parse("http://api.themoviedb.org/3/discover/movie").buildUpon()
-                        .appendQueryParameter("sort_by", params[0])
-                        .appendQueryParameter("api_key", getString(R.string.movie_db_key))
+            if (NetworkHelper.isNetworkAvailable(getActivity())) {
+                RestAdapter restAdapter = new RestAdapter.Builder()
+                        .setEndpoint("http://api.themoviedb.org")
                         .build();
-                URL url = new URL(builtUri.toString());
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (inputStream == null) {
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
 
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    buffer.append(line + "\n");
-                }
-                if (buffer.length() == 0) {
-                    return null;
-                }
-                movieListJsonStr = buffer.toString();
-            } catch (IOException e) {
-                Log.e(TAG, "Error ", e);
-                return null;
-            } finally{
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(TAG, "Error closing stream", e);
+                MovieService service = restAdapter.create(MovieService.class);
+                service.listMovies(sortOrder, getString(R.string.movie_db_key), new Callback<MoviesResponse>() {
+                    @Override
+                    public void success(MoviesResponse moviesResponse, Response response) {
+                        mMovies = new ArrayList<>(Arrays.asList(moviesResponse.results));
+                        displayMovies();
                     }
-                }
+
+                    @Override
+                    public void failure(RetrofitError error) {
+                        mEmptyView.setVisibility(View.VISIBLE);
+                    }
+                });
+            } else {
+                mNetworkNotificationDialogFragment.show(getFragmentManager(), NetworkNotificationDialogFragment.TAG);
             }
-
-            try {
-                JSONObject movieListJson = new JSONObject(movieListJsonStr);
-                JSONArray movieListJsonArray = movieListJson.getJSONArray("results");
-                return movieListJsonArray;
-            } catch (JSONException e) {
-                Log.e(TAG, e.getMessage(), e);
-                e.printStackTrace();
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(JSONArray movies) {
-            displayMovies(movies);
         }
     }
 
+    private void displayMovies() {
+        mImageAdapter.clear();
+        for (int i = 0; i < mMovies.size(); i++) {
+            mImageAdapter.add(mMovies.get(i));
+        }
+        if (mMovies.size() > 0) {
+            mEmptyView.setVisibility(View.GONE);
+        } else {
+            mEmptyView.setVisibility(View.VISIBLE);
+        }
+    }
 }
