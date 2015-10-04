@@ -37,7 +37,7 @@ public class ReviewsAdapter extends ArrayAdapter<Review> {
         TextView contentView = (TextView) container.findViewById(R.id.content);
         contentView.setText(review.content);
         TextView authorView = (TextView) container.findViewById(R.id.author);
-        authorView.setText(review.author);
+        authorView.setText("\u2014 " + review.author);
 
         return container;
     }

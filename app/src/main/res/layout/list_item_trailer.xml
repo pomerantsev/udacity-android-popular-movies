@@ -1,18 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:paddingTop="@dimen/list_item_vertical_margin"
+    android:paddingBottom="@dimen/list_item_vertical_margin">
+    <ImageView
+        android:id="@+id/icon_play"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:src="@android:drawable/ic_media_play" />
     <TextView
         android:id="@+id/name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/icon_play"
+        android:textStyle="bold"
         tools:text="Trailers from Hell" />
     <TextView
         android:id="@+id/type"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/icon_play"
+        android:layout_below="@id/name"
         tools:text="Featurette" />
-</LinearLayout>
+</RelativeLayout>
