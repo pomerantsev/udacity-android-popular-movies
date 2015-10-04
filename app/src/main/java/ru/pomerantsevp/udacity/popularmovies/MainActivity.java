@@ -8,10 +8,27 @@ import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String DETAILFRAGMENT_TAG = "DFTAG";
+
+    private boolean mTwoPane;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (findViewById(R.id.movie_detail_container) == null) {
+            mTwoPane = false;
+        } else {
+            mTwoPane = true;
+            if (savedInstanceState == null) {
+                getFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.movie_detail_container, new DetailActivityFragment(),
+                                DETAILFRAGMENT_TAG)
+                        .commit();
+            }
+        }
     }
 
 

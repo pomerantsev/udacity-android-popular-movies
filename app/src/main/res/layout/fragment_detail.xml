@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     tools:context="ru.pomerantsevp.udacity.popularmovies.DetailActivityFragment">
     <RelativeLayout
+        android:id="@+id/content_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:paddingLeft="@dimen/activity_horizontal_margin"

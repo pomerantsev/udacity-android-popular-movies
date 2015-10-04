@@ -60,6 +60,7 @@ public class DetailActivityFragment extends Fragment {
         Activity activity = getActivity();
         Intent intent = activity.getIntent();
         if (intent != null && intent.hasExtra(SharedConstants.MOVIE_KEY)) {
+            rootView.findViewById(R.id.content_container).setVisibility(View.VISIBLE);
             mMovie = intent.getParcelableExtra(SharedConstants.MOVIE_KEY);
             String imageUrl = SharedConstants.IMAGE_PATH_PREFIX + mMovie.poster_path;
             ImageView poster = (ImageView) rootView.findViewById(R.id.poster);
@@ -158,6 +159,8 @@ public class DetailActivityFragment extends Fragment {
                         public void failure(RetrofitError error) {
                         }
                     });
+        } else {
+            rootView.findViewById(R.id.content_container).setVisibility(View.GONE);
         }
 
         return rootView;
