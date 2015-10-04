@@ -40,4 +40,8 @@ public class Trailer implements Parcelable {
             return new Trailer[size];
         }
     };
+
+    public String getYoutubeUrl() {
+        return "http://youtube.com/watch?v=" + key;
+    }
 }

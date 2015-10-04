@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Popular Movies</string>
     <string name="action_settings">Settings</string>
+    <string name="action_share_trailer">Share Trailer</string>
     <string name="title_activity_detail">Movie Details</string>
     <string name="title_activity_settings">Settings</string>
     <string name="empty_list">Data unavailable</string>
@@ -10,6 +11,7 @@
     <string name="trailers_empty">No trailers available</string>
     <string name="reviews">Reviews</string>
     <string name="reviews_empty">No reviews available</string>
+    <string name="share_dialog_title">Share link to trailer</string>
 
     <string name="ok">Ok</string>
 

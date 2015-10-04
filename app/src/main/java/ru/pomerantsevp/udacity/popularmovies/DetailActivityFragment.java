@@ -8,6 +8,9 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -49,6 +52,7 @@ public class DetailActivityFragment extends Fragment {
     private ListView mTrailersListView;
     private List<Review> mReviews;
     private ListView mReviewsListView;
+    private MenuItem mShareMenuItem;
 
     public DetailActivityFragment() {
     }
@@ -59,6 +63,32 @@ public class DetailActivityFragment extends Fragment {
         args.putParcelable(MOVIE_TAG, movie);
         f.setArguments(args);
         return f;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_detail, menu);
+        mShareMenuItem = menu.findItem(R.id.action_share_trailer);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_share_trailer) {
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, mTrailers.get(0).getYoutubeUrl());
+            startActivity(Intent.createChooser(shareIntent,
+                    getString(R.string.share_dialog_title)));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -92,6 +122,8 @@ public class DetailActivityFragment extends Fragment {
                 Date date = inputFormat.parse(mMovie.release_date);
                 releaseDate.setText(outputFormat.format(date));
             } catch (ParseException e) {}
+              catch (NullPointerException e) {}
+
 
             TextView rating = (TextView) rootView.findViewById(R.id.rating);
             rating.setText(mMovie.vote_average + "/10");
@@ -131,7 +163,7 @@ public class DetailActivityFragment extends Fragment {
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     startActivity(new Intent(
                             Intent.ACTION_VIEW,
-                            Uri.parse("http://youtube.com/watch?v=" + mTrailers.get(position).key)
+                            Uri.parse(mTrailers.get(position).getYoutubeUrl())
                     ));
                 }
             });
@@ -146,6 +178,9 @@ public class DetailActivityFragment extends Fragment {
                                     mTrailers
                             );
                             mTrailersListView.setAdapter(trailersAdapter);
+                            if (!mTrailers.isEmpty()) {
+                                mShareMenuItem.setVisible(true);
+                            }
                         }
 
                         @Override
